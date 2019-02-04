@@ -21,7 +21,7 @@ MIN_TIP = config.get('webhooks', 'min_tip')
 
 # Connect to global functions
 rpc = nano.rpc.Client(NODE_IP)
-raw_denominator = 10**10
+raw_denominator = 10**2
 
 
 def parse_action(message):

@@ -20,7 +20,7 @@ NODE_IP = config.get('webhooks', 'node_ip')
 
 # Connect to Nano node
 rpc = nano.rpc.Client(NODE_IP)
-raw_denominator = 10**10
+raw_denominator = 10**2
 
 
 def receive_pending(sender_account):
