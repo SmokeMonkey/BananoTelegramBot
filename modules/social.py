@@ -20,6 +20,7 @@ TELEGRAM_KEY = config.get('webhooks', 'telegram_key')
 # Constants
 MIN_TIP = config.get('webhooks', 'min_tip')
 NODE_IP = config.get('webhooks', 'node_ip')
+BOTNAME = config.get('webhooks', 'bot_id_telegram')
 
 # Connect to Telegram
 telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
@@ -48,6 +49,8 @@ def check_message_action(message):
     """
     logging.info("{}: in check_message_action.".format(datetime.now()))
     try:
+        botname = "@{}".format(BOTNAME).lower()
+        message['bot'] = message['text'].index(botname)
         message['action_index'] = message['text'].index("!tip")
     except ValueError:
         message['action'] = None
