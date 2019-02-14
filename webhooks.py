@@ -1,6 +1,7 @@
 import os
 from http import HTTPStatus
 import click
+import re
 
 from flask import Flask, render_template, request
 
@@ -126,8 +127,10 @@ def telegram_event(path):
 
                     message['id'] = request_json['message']['message_id']
                     message['chat_id'] = request_json['message']['chat']['id']
-                    message['chat_name'] = request_json['message']['chat'][
-                        'title']
+                    chat_name = re.sub('\W+',' ', request_json['message']['chat'][
+                        'title'] )
+                    message['chat_name'] = chat_name
+
 
                     check_telegram_member(
                         message['chat_id'], message['chat_name'],
