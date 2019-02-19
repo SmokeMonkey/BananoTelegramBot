@@ -1,7 +1,7 @@
 import configparser
 import logging
 import os
-from datetime import datetime
+import datetime
 from peewee import IntegerField, CharField, BigIntegerField, ForeignKeyField, DateTimeField, Model
 from playhouse.pool  import PooledPostgresqlDatabase
 
@@ -64,7 +64,7 @@ def set_db_data_tip(message, users_to_tip, t_index):
     """
     Special case to update DB information to include tip data
     """
-    logging.info("{}: inserting tip into DB.".format(datetime.utcnow()))
+    logging.info("{}: inserting tip into DB.".format(datetime.datetime.utcnow()))
     try:
         sender = User.select().where(User.user_id == int(message['sender_id'])).get()
         receiver = User.select().where(User.user_id == int(users_to_tip[t_index]['receiver_id'])).get()
@@ -77,10 +77,10 @@ def set_db_data_tip(message, users_to_tip, t_index):
                 receiver=receiver,
                 dm_text=message_text,
                 amount=int(message['tip_amount']),
-                created_ts=datetime.utcnow())
+                created_ts=datetime.datetime.utcnow())
         if tip.save(force_insert=True) == 0:
             raise Exception("Couldn't insert tip {0}".format(message['id']))
     except Exception as e:
-        logging.info("{}: Exception in set_db_data_tip".format(datetime.utcnow()))
-        logging.info("{}: {}".format(datetime.utcnow(), e))
+        logging.info("{}: Exception in set_db_data_tip".format(datetime.datetime.utcnow()))
+        logging.info("{}: {}".format(datetime.datetime.utcnow(), e))
         raise e

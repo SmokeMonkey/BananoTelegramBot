@@ -1,15 +1,12 @@
 import configparser
 import logging
 import os
-from datetime import datetime
+import datetime
 from decimal import Decimal
 
 import nano
 import pyqrcode
 import telegram
-
-import modules.currency as currency
-import modules.db as db
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -40,7 +37,7 @@ def send_dm(receiver, message):
         telegram_bot.sendMessage(chat_id=receiver, text=message)
     except Exception as e:
         logging.info("{}: Send DM - Telegram ERROR: {}".format(
-            datetime.utcnow(), e))
+            datetime.datetime.utcnow(), e))
         pass
 
 
@@ -48,7 +45,7 @@ def check_message_action(message):
     """
     Check to see if there are any key action values mentioned in the message.
     """
-    logging.info("{}: in check_message_action.".format(datetime.utcnow()))
+    logging.info("{}: in check_message_action.".format(datetime.datetime.utcnow()))
     try:
         botname = "@{}".format(BOTNAME).lower()
         message['bot'] = message['text'].index(botname)
@@ -67,13 +64,13 @@ def validate_tip_amount(message):
     """
     Validate the message includes an amount to tip, and if that tip amount is greater than the minimum tip amount.
     """
-    logging.info("{}: in validate_tip_amount".format(datetime.utcnow()))
+    logging.info("{}: in validate_tip_amount".format(datetime.datetime.utcnow()))
     try:
         message['tip_amount'] = Decimal(
             message['text'][message['starting_point']])
     except Exception:
         logging.info("{}: Tip amount was not a number: {}".format(
-            datetime.utcnow(), message['text'][message['starting_point']]))
+            datetime.datetime.utcnow(), message['text'][message['starting_point']]))
         not_a_number_text = 'Looks like the value you entered to tip was not a number.  You can try to tip ' \
                             'again using the format !tip 1234 @username'
         send_reply(message, not_a_number_text)
@@ -89,7 +86,7 @@ def validate_tip_amount(message):
 
         message['tip_amount'] = -1
         logging.info("{}: User tipped less than {} Nos.".format(
-            datetime.utcnow(), MIN_TIP))
+            datetime.datetime.utcnow(), MIN_TIP))
         return message
 
     try:
@@ -98,8 +95,8 @@ def validate_tip_amount(message):
     except Exception as e:
         logging.info(
             "{}: Exception converting tip_amount to tip_amount_raw".format(
-                datetime.utcnow()))
-        logging.info("{}: {}".format(datetime.utcnow(), e))
+                datetime.datetime.utcnow()))
+        logging.info("{}: {}".format(datetime.datetime.utcnow(), e))
         message['tip_amount'] = -1
         return message
 
@@ -113,11 +110,12 @@ def validate_tip_amount(message):
 
 
 def set_tip_list(message, users_to_tip):
+    import modules.db as db
     """
     Loop through the message starting after the tip amount and identify any users that were tagged for a tip.  Add the
     user object to the users_to_tip dict to process the tips.
     """
-    logging.info("{}: in set_tip_list.".format(datetime.utcnow()))
+    logging.info("{}: in set_tip_list.".format(datetime.datetime.utcnow()))
 
     logging.info("trying to set tiplist in telegram: {}".format(message))
     for t_index in range(message['starting_point'] + 1, len(message['text'])):
@@ -151,7 +149,7 @@ def set_tip_list(message, users_to_tip):
                     users_to_tip.clear()
                     return message, users_to_tip
 
-    logging.info("{}: Users_to_tip: {}".format(datetime.utcnow(), users_to_tip))
+    logging.info("{}: Users_to_tip: {}".format(datetime.datetime.utcnow(), users_to_tip))
     message['total_tip_amount'] = message['tip_amount']
     if len(users_to_tip) > 0 and message['tip_amount'] != -1:
         message['total_tip_amount'] *= len(users_to_tip)
@@ -160,10 +158,12 @@ def set_tip_list(message, users_to_tip):
 
 
 def validate_sender(message):
+    import modules.db as db
+    import modules.currency as currency
     """
     Validate that the sender has an account with the tip bot, and has enough NANO to cover the tip.
     """
-    logging.info("{}: validating sender".format(datetime.utcnow()))
+    logging.info("{}: validating sender".format(datetime.datetime.utcnow()))
     logging.info("sender id: {}".format(message['sender_id']))
     try:
         user = db.User.select().where(db.User.user_id == int(message['sender_id'])).get()
@@ -187,7 +187,7 @@ def validate_sender(message):
         send_reply(message, no_account_text)
 
         logging.info("{}: User tried to send a tip without an account.".format(
-            datetime.utcnow()))
+            datetime.datetime.utcnow()))
         message['sender_account'] = None
         return message
 
@@ -195,7 +195,7 @@ def validate_total_tip_amount(message):
     """
     Validate that the sender has enough Nano to cover the tip to all users
     """
-    logging.info("{}: validating total tip amount".format(datetime.utcnow()))
+    logging.info("{}: validating total tip amount".format(datetime.datetime.utcnow()))
     if message['sender_balance_raw']['balance'] < (
             message['total_tip_amount'] * raw_denominator):
         not_enough_text = (
@@ -206,7 +206,7 @@ def validate_total_tip_amount(message):
 
         logging.info(
             "{}: User tried to send more than in their account.".format(
-                datetime.utcnow()))
+                datetime.datetime.utcnow()))
         message['tip_amount'] = -1
         return message
 
@@ -218,17 +218,18 @@ def send_reply(message, text):
 
 
 def check_telegram_member(chat_id, chat_name, member_id, member_name):
+    import modules.db as db
     try:
         db.TelegramChatMember.select().where(db.TelegramChatMember.chat_id == chat_id & db.TelegramChatMember.member_name == member_name).get()
     except db.TelegramChatMember.DoesNotExist:
         logging.info("{}: User {}-{} not found in DB, inserting".format(
-            datetime.utcnow(), chat_id, member_name))
+            datetime.datetime.utcnow(), chat_id, member_name))
         chat_member = db.TelegramChatMember(
             char_id = chat_id,
             chat_name = chat_name,
             member_id = member_id,
             member_name = member_name,
-            created_ts=datetime.utcnow()
+            created_ts=datetime.datetime.utcnow()
         )
         chat_member.save()
 

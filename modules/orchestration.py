@@ -1,15 +1,11 @@
 import configparser
 import logging
 import os
-from datetime import datetime
+import datetime
 from decimal import Decimal
 from http import HTTPStatus
 
 import nano
-
-import modules.currency as currency
-import modules.db as db
-import modules.social as social
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -27,6 +23,7 @@ raw_denominator = 10**29
 
 
 def parse_action(message):
+    import modules.social as social
     if message['dm_action'] == '.help' or message[
             'dm_action'] == '/help' or message['dm_action'] == '/start':
         try:
@@ -106,6 +103,7 @@ def parse_action(message):
 
 
 def help_process(message):
+    import modules.social as social
     """
     Reply to the sender with help commands
     """
@@ -125,14 +123,17 @@ def help_process(message):
         " .withdraw: Proper usage is .withdraw ban_1meme1...  This will send the full balance of your tip account to another external BANANO account.  Optional: You can include an amount to withdraw by sending .withdraw <amount> <address>.  Example: .withdraw 1 ban_1meme1... would withdraw 1 BAN to account ban_1meme1...\n\n"
     )
     social.send_dm(message['sender_id'], help_message)
-    logging.info("{}: Help message sent!".format(datetime.utcnow()))
+    logging.info("{}: Help message sent!".format(datetime.datetime.utcnow()))
 
 
 def balance_process(message):
+    import modules.db as db
+    import modules.currency as currency
+    import modules.social as social
     """
     When the user sends a DM containing !balance, reply with the balance of the account linked with their Twitter ID
     """
-    logging.info("{}: In balance process".format(datetime.utcnow()))
+    logging.info("{}: In balance process".format(datetime.datetime.utcnow()))
     try:
         user = db.User.select().where(db.User.user_id == int(message['sender_id'])).get()
         message['sender_account'] = user.account
@@ -150,22 +151,24 @@ def balance_process(message):
         balance_text = "Your balance is {} BAN.".format(
             message['sender_balance'])
         social.send_dm(message['sender_id'], balance_text)
-        logging.info("{}: Balance Message Sent!".format(datetime.utcnow()))
+        logging.info("{}: Balance Message Sent!".format(datetime.datetime.utcnow()))
     except db.User.DoesNotExist:
         logging.info(
             "{}: User tried to check balance without an account".format(
-                datetime.utcnow()))
+                datetime.datetime.utcnow()))
         balance_message = (
             "There is no account linked to your username.  Please respond with .register to "
             "create an account.")
         social.send_dm(message['sender_id'], balance_message)
 
 def register_process(message):
+    import modules.db as db
+    import modules.social as social
     """
     When the user sends .register, create an account for them and mark it registered.  If they already have an account
     reply with their account number.
     """
-    logging.info("{}: In register process.".format(datetime.utcnow()))
+    logging.info("{}: In register process.".format(datetime.datetime.utcnow()))
     try:
         user = db.User.select().where(db.User.user_id == int(message['sender_id'])).get()
         if user.register == 0:
@@ -179,7 +182,7 @@ def register_process(message):
 
             logging.info(
                 "{}: User has an account, but needed to register.  Message sent".
-                format(datetime.utcnow()))
+                format(datetime.datetime.utcnow()))
         else:
             # The user had an account and already registered, so let them know their account.
             sender_account = user.account
@@ -189,7 +192,7 @@ def register_process(message):
 
             logging.info(
                 "{}: User has a registered account.  Message sent.".format(
-                    datetime.utcnow()))
+                    datetime.datetime.utcnow()))
     except db.User.DoesNotExist:
         # Create an account for the user
         sender_account = rpc.account_create(
@@ -199,7 +202,7 @@ def register_process(message):
             user_name = message['sender_screen_name'],
             account = sender_account,
             register=1,
-            created_ts=datetime.utcnow()
+            created_ts=datetime.datetime.utcnow()
         )
         if user.save() > 0:
             account_text = "You have successfully registered for an account.  Your deposit address is:"
@@ -208,15 +211,17 @@ def register_process(message):
             account_text = "Something went wrong - please try again later ot inform one of my masters"
             social.send_dm(message['sender_id'], account_text)
 
-        logging.info("{}: Register successful!".format(datetime.utcnow()))
+        logging.info("{}: Register successful!".format(datetime.datetime.utcnow()))
 
 def account_process(message):
+    import modules.db as db
+    import modules.social as social
     """
     If the user sends .account command, reply with their account.  If there is no account, create one, register it
     and reply to the user.
     """
 
-    logging.info("{}: In account process.".format(datetime.utcnow()))
+    logging.info("{}: In account process.".format(datetime.datetime.utcnow()))
     try:
         user = db.User.select().where(db.User.user_id == int(message['sender_id'])).get()
         sender_account = user.account
@@ -229,7 +234,7 @@ def account_process(message):
         social.send_account_message(account_text, message, sender_account)
 
         logging.info("{}: Sent the user their account number.".format(
-            datetime.utcnow()))
+            datetime.datetime.utcnow()))
     except db.User.DoesNotExist:
         sender_account = rpc.account_create(
             wallet="{}".format(WALLET), work=True)
@@ -238,21 +243,24 @@ def account_process(message):
             user_name = message['sender_screen_name'],
             account = sender_account,
             register=1,
-            created_ts=datetime.utcnow()
+            created_ts=datetime.datetime.utcnow()
         )
         user.save()
         account_text = "You didn't have an account set up, so I set one up for you.  Your deposit address is:"
         social.send_account_message(account_text, message, sender_account)
 
         logging.info("{}: Created an account for the user!".format(
-            datetime.utcnow()))
+            datetime.datetime.utcnow()))
 
 def withdraw_process(message):
+    import modules.db as db
+    import modules.currency as currency
+    import modules.social as social
     """
     When the user sends !withdraw, send their entire balance to the provided account.  If there is no provided account
     reply with an error.
     """
-    logging.info('{}: in withdraw process.'.format(datetime.utcnow()))
+    logging.info('{}: in withdraw process.'.format(datetime.datetime.utcnow()))
     # check if there is a 2nd argument
     if 3 >= len(message['dm_array']) >= 2:
         # if there is, retrieve the sender's account and wallet
@@ -275,7 +283,7 @@ def withdraw_process(message):
                 social.send_dm(message['sender_id'], invalid_account_text)
                 logging.info(
                     "{}: The BAN account address is invalid: {}".format(
-                        datetime.utcnow(), receiver_account))
+                        datetime.datetime.utcnow(), receiver_account))
             elif balance_return['balance'] == 0:
                 no_balance_text = (
                     "You have 0 balance in your account.  Please deposit to your address {} to "
@@ -283,14 +291,14 @@ def withdraw_process(message):
                 social.send_dm(message['sender_id'], no_balance_text)
                 logging.info(
                     "{}: The user tried to withdraw with 0 balance".format(
-                        datetime.utcnow()))
+                        datetime.datetime.utcnow()))
             else:
                 if len(message['dm_array']) == 3:
                     try:
                         withdraw_amount = Decimal(message['dm_array'][1])
                     except Exception as e:
                         logging.info("{}: withdraw no number ERROR: {}".format(
-                            datetime.utcnow(), e))
+                            datetime.datetime.utcnow(), e))
                         invalid_amount_text = (
                             "You did not send a number to withdraw.  Please resend with the format"
                             ".withdraw <account> or !withdraw <amount> <account>"
@@ -316,7 +324,7 @@ def withdraw_process(message):
                 work = currency.get_pow(sender_account)
                 if work == '':
                     logging.info("{}: processed without work".format(
-                        datetime.utcnow()))
+                        datetime.datetime.utcnow()))
                     send_hash = rpc.send(
                         wallet="{}".format(WALLET),
                         source="{}".format(sender_account),
@@ -324,7 +332,7 @@ def withdraw_process(message):
                         amount=withdraw_amount_raw)
                 else:
                     logging.info("{}: processed with work: {}".format(
-                        datetime.utcnow(), work))
+                        datetime.datetime.utcnow(), work))
                     send_hash = rpc.send(
                         wallet="{}".format(WALLET),
                         source="{}".format(sender_account),
@@ -332,18 +340,18 @@ def withdraw_process(message):
                         amount=withdraw_amount_raw,
                         work=work)
                 logging.info("{}: send_hash = {}".format(
-                    datetime.utcnow(), send_hash))
+                    datetime.datetime.utcnow(), send_hash))
                 # respond that the withdraw has been processed
                 withdraw_text = ("You have successfully withdrawn {} BANANO!".
                                  format(withdraw_amount))
                 social.send_dm(message['sender_id'], withdraw_text)
                 logging.info("{}: Withdraw processed.  Hash: {}".format(
-                    datetime.utcnow(), send_hash))
+                    datetime.datetime.utcnow(), send_hash))
         except db.User.DoesNotExist:
             withdraw_no_account_text = "You do not have an account.  Respond with .register to set one up."
             social.send_dm(message['sender_id'], withdraw_no_account_text)
             logging.info("{}: User tried to withdraw with no account".format(
-                datetime.utcnow()))
+                datetime.datetime.utcnow()))
     else:
         incorrect_withdraw_text = (
             "I didn't understand your withdraw request.  Please resend with .withdraw "
@@ -353,14 +361,16 @@ def withdraw_process(message):
             "ban_1meme1...")
         social.send_dm(message['sender_id'], incorrect_withdraw_text)
         logging.info("{}: User sent a withdraw with invalid syntax.".format(
-            datetime.utcnow()))
+            datetime.datetime.utcnow()))
 
 
 def tip_process(message, users_to_tip):
+    import modules.currency as currency
+    import modules.social as social
     """
     Main orchestration process to handle tips
     """
-    logging.info("{}: in tip_process".format(datetime.utcnow()))
+    logging.info("{}: in tip_process".format(datetime.datetime.utcnow()))
 
     message, users_to_tip = social.set_tip_list(message, users_to_tip)
 

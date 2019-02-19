@@ -3,13 +3,10 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+import datetime
 
 import nano
 import requests
-
-import modules.db as db
-import modules.social as social
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -29,7 +26,7 @@ def receive_pending(sender_account):
     Check to see if the account has any pending blocks and process them
     """
     try:
-        logging.info("{}: in receive pending".format(datetime.utcnow()))
+        logging.info("{}: in receive pending".format(datetime.datetime.utcnow()))
         pending_blocks = rpc.pending(account='{}'.format(sender_account))
         logging.info("pending blocks: {}".format(pending_blocks))
         if len(pending_blocks) > 0:
@@ -37,7 +34,7 @@ def receive_pending(sender_account):
                 work = get_pow(sender_account)
                 if work == '':
                     logging.info("{}: processing without pow".format(
-                        datetime.utcnow()))
+                        datetime.datetime.utcnow()))
                     receive_data = {
                         'action': "receive",
                         'wallet': WALLET,
@@ -46,7 +43,7 @@ def receive_pending(sender_account):
                     }
                 else:
                     logging.info("{}: processing with pow".format(
-                        datetime.utcnow()))
+                        datetime.datetime.utcnow()))
                     receive_data = {
                         'action': "receive",
                         'wallet': WALLET,
@@ -57,10 +54,10 @@ def receive_pending(sender_account):
                 receive_json = json.dumps(receive_data)
                 requests.post('{}'.format(NODE_IP), data=receive_json)
                 logging.info("{}: block {} received".format(
-                    datetime.utcnow(), block))
+                    datetime.datetime.utcnow(), block))
 
         else:
-            logging.info('{}: No blocks to receive.'.format(datetime.utcnow()))
+            logging.info('{}: No blocks to receive.'.format(datetime.datetime.utcnow()))
 
     except Exception as e:
         logging.info("Receive Pending Error: {}".format(e))
@@ -73,42 +70,44 @@ def get_pow(sender_account):
     """
     Retrieves the frontier (hash of previous transaction) of the provided account and generates work for the next block.
     """
-    logging.info("{}: in get_pow".format(datetime.utcnow()))
+    logging.info("{}: in get_pow".format(datetime.datetime.utcnow()))
     try:
         account_frontiers = rpc.accounts_frontiers([sender_account])
         frontier_hash = account_frontiers[sender_account]
     except Exception as e:
         logging.info("{}: Error checking frontier: {}".format(
-            datetime.utcnow(), e))
+            datetime.datetime.utcnow(), e))
         return ''
     logging.info("account_frontiers: {}".format(account_frontiers))
 
     work = ''
-    logging.info("{}: hash: {}".format(datetime.utcnow(), frontier_hash))
+    logging.info("{}: hash: {}".format(datetime.datetime.utcnow(), frontier_hash))
     while work == '':
         try:
             work = rpc.work_generate(frontier_hash, use_peers=True)
-            logging.info("{}: Work generated: {}".format(datetime.utcnow(), work))
+            logging.info("{}: Work generated: {}".format(datetime.datetime.utcnow(), work))
         except Exception as e:
             logging.info("{}: ERROR GENERATING WORK: {}".format(
-                datetime.utcnow(), e))
+                datetime.datetime.utcnow(), e))
             pass
 
     return work
 
 
 def send_tip(message, users_to_tip, tip_index):
+    import modules.db as db
+    import modules.social as social
     """
     Process tip for specified user
     """
     logging.info("{}: sending tip to {}".format(
-        datetime.utcnow(), users_to_tip[tip_index]['receiver_screen_name']))
+        datetime.datetime.utcnow(), users_to_tip[tip_index]['receiver_screen_name']))
     if str(users_to_tip[tip_index]['receiver_id']) == str(
             message['sender_id']):
         self_tip_text = "Self tipping is not allowed.  Please use this bot to tip BANANO to other users!"
         social.send_reply(message, self_tip_text)
 
-        logging.info("{}: User tried to tip themself").format(datetime.utcnow())
+        logging.info("{}: User tried to tip themself").format(datetime.datetime.utcnow())
         return
 
     # Check if the receiver has an account
@@ -124,12 +123,12 @@ def send_tip(message, users_to_tip, tip_index):
             user_name = users_to_tip[tip_index]['receiver_screen_name'],
             account = users_to_tip[tip_index]['receiver_account'],
             register=0,
-            created_ts=datetime.utcnow()
+            created_ts=datetime.datetime.utcnow()
         )
         user.save()
         logging.info(
             "{}: Sender sent to a new receiving account.  Created  account {}".
-            format(datetime.utcnow(),
+            format(datetime.datetime.utcnow(),
                    users_to_tip[tip_index]['receiver_account']))
     # Send the tip
 
@@ -190,8 +189,8 @@ def send_tip(message, users_to_tip, tip_index):
     except Exception as e:
         logging.info(
             "{}: ERROR IN RECEIVING NEW TIP - POSSIBLE NEW ACCOUNT NOT REGISTERED WITH DPOW: {}"
-            .format(datetime.utcnow(), e))
+            .format(datetime.datetime.utcnow(), e))
 
     logging.info("{}: tip sent to {} via hash {}".format(
-        datetime.utcnow(), users_to_tip[tip_index]['receiver_screen_name'],
+        datetime.datetime.utcnow(), users_to_tip[tip_index]['receiver_screen_name'],
         message['send_hash']))
