@@ -7,9 +7,9 @@ from http import HTTPStatus
 
 import nano
 
-import currency
-import db
-import social
+import modules.currency as currency
+import modules.db as db
+import modules.social as social
 
 # Read config and parse constants
 config = configparser.ConfigParser()

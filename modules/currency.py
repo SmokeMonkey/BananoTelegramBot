@@ -8,8 +8,8 @@ from datetime import datetime
 import nano
 import requests
 
-import db
-import social
+import modules.db as db
+import modules.social as social
 
 # Read config and parse constants
 config = configparser.ConfigParser()
