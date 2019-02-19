@@ -1,13 +1,20 @@
+from eventlet import monkey_patch
+monkey_patch()
+
+import configparser
 import os
+import logging
+import telegram
 from http import HTTPStatus
+from datetime import datetime
 import click
 import re
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, g
 
-from modules.orchestration import *
-from modules.social import *
-from modules.db import *
+from modules.orchestration import parse_action, tip_process
+from modules.social import send_account_message, send_dm, send_reply, check_message_action, check_telegram_member, validate_tip_amount, validate_sender, validate_total_tip_amount
+from modules.db import User, TelegramChatMember, Tip, database, create_tables
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -24,27 +31,17 @@ SERVER_URL = config.get('webhooks', 'server_url')
 # Set up Flask routing
 app = Flask(__name__)
 
+# Request handlers -- these two hooks are provided by flask and we will use them
+# to create and tear down a database connection on each request.
+@app.before_request
+def before_request():
+    g.db = database
+    g.db.connect()
 
-# Creating databases
-@app.cli.command('db_init')
-def db_init():
-    delete_db()
-    create_db()
-    create_tables()
-    logging.info('Succesfully initiated database.')
-
-
-@app.cli.command('db_create_tables')
-def db_init():
-    create_tables()
-    logging.info('Successfully created tables.')
-
-
-@app.cli.command('db_drop_table')
-@click.argument('name')
-def db_drop(name):
-    drop_table(name)
-
+@app.after_request
+def after_request(response):
+    g.db.close()
+    return response
 
 # Connect to Telegram
 telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
@@ -112,7 +109,7 @@ def telegram_event(path):
                 message['dm_action'] = message['dm_array'][0].lower() # TODO: use regex!
 
                 logging.info("{}: action identified: {}".format(
-                    datetime.now(), message['dm_action']))
+                    datetime.utcnow(), message['dm_action']))
 
                 parse_action(message)
 
@@ -145,7 +142,7 @@ def telegram_event(path):
                     if message['action'] is None:
                         logging.debug(
                             "{}: Mention of nano tip bot without a !tip command."
-                            .format(datetime.now()))
+                            .format(datetime.utcnow()))
                         return '', HTTPStatus.OK
 
                     message = validate_tip_amount(message)
@@ -154,16 +151,12 @@ def telegram_event(path):
 
                     if message['action'] != -1 and str(
                             message['sender_id']) != str(BOT_ID_TELEGRAM):
-                        new_pid = os.fork()
-                        if new_pid == 0:
-                            try:
-                                tip_process(message, users_to_tip)
-                            except Exception as e:
-                                logging.info("Exception: {}".format(e))
-                                raise e
-
-                            os._exit(0)
-                        else:
+                        try:
+                            tip_process(message, users_to_tip)
+                        except Exception as e:
+                            logging.info("Exception: {}".format(e))
+                            raise e
+                        finally:
                             return '', HTTPStatus.OK
 
                 elif 'new_chat_member' in request_json['message']:
@@ -175,11 +168,13 @@ def telegram_event(path):
                     member_name = request_json['message']['new_chat_member'][
                         'username']
 
-                    new_chat_member_call = (
-                        "INSERT INTO telegram_chat_members (chat_id, chat_name, member_id, member_name) "
-                        "VALUES ({}, '{}', {}, '{}')".format(
-                            chat_id, chat_name, member_id, member_name))
-                    set_db_data(new_chat_member_call)
+                    chat_member = TelegramChatMember(
+                        char_id = chat_id,
+                        chat_name = chat_name,
+                        member_id = member_id,
+                        member_name = member_name
+                    )
+                    chat_member.save()
 
                 elif 'left_chat_member' in request_json['message']:
                     chat_id = request_json['message']['chat']['id']
@@ -193,11 +188,11 @@ def telegram_event(path):
                         "member {}-{} left chat {}-{}, removing from DB.".
                         format(member_id, member_name, chat_id, chat_name))
 
-                    remove_member_call = (
-                        "DELETE FROM telegram_chat_members "
-                        "WHERE chat_id = {} AND member_id = {}".format(
-                            chat_id, member_id))
-                    set_db_data(remove_member_call)
+                    chat_member = TelegramChatMember.select().where(
+                                                TelegramChatMember.chat_id == chat_id & 
+                                                TelegramChatMember.member_id == member_id)
+                    if chat_member.count() > 0:
+                        chat_member.delete_instance()
 
                 elif 'group_chat_created' in request_json['message']:
                     chat_id = request_json['message']['chat']['id']
@@ -209,11 +204,14 @@ def telegram_event(path):
                         "member {} created chat {}, inserting creator into DB."
                         .format(member_name, chat_name))
 
-                    new_chat_call = (
-                        "INSERT INTO telegram_chat_members (chat_id, chat_name, member_id, member_name) "
-                        "VALUES ({}, '{}', {}, '{}')".format(
-                            chat_id, chat_name, member_id, member_name))
-                    set_db_data(new_chat_call)
+                    chat_member = TelegramChatMember(
+                        chat_id = chat_id,
+                        chat_name = chat_name,
+                        member_id = member_id,
+                        member_name = member_name
+                    )
+
+                    chat_member.save()
 
             else:
                 logging.info("In try: request: {}".format(request_json))
@@ -226,4 +224,5 @@ def telegram_event(path):
         return 'ok'
 
 if __name__ == "__main__":
+    create_tables()
     app.run()

@@ -2,6 +2,7 @@ python-telegram-bot
 requests
 flask
 pyqrcode
-nano-python
-mysqlclient
-pymysql
+eventlet
+peewee
+gunicorn
+git+https://github.com/bbedward/nano-python.git#egg=nano-python

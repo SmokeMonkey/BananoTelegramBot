@@ -1,0 +1,15 @@
+[Unit]
+Description=BANANOTipBot - Gunicorn Worker
+After=network.target
+
+[Service]
+PIDFile=/tmp/telegrambotbananopid
+User=bananobot
+WorkingDirectory=/home/bananobot/BananoTelegramBot
+ExecStart=/home/bananobot/BananoTelegramBot/venv/bin/gunicorn --pid /tmp/telegrambotbananopid --bind 0.0.0.0:8787 -w 1 --worker-class eventlet --error-log=/tmp/telegrambot.log webhooks:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
