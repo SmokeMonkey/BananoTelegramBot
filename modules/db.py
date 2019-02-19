@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from peewee import IntegerField, CharField, BigIntegerField, ForeignKeyField, DateTimeField, Model
-from playhouse.pool  import PooledPostgresqlExtDatabase
+from playhouse.pool  import PooledPostgresqlDatabase
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -16,7 +16,7 @@ DB_PW = config.get('webhooks', 'password')
 DB_SCHEMA = config.get('webhooks', 'schema')
 DB_PORT = int(config.get('webhooks', 'port'))
 
-database = PooledPostgresqlExtDatabase(DB_SCHEMA, user=DB_USER, password=DB_PW, host=DB_HOST, port=DB_PORT, max_connections=20)
+database = PooledPostgresqlDatabase(DB_SCHEMA, user=DB_USER, password=DB_PW, host=DB_HOST, port=DB_PORT, max_connections=20)
 
 class BaseModel(Model):
     class Meta:
