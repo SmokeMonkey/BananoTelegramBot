@@ -2,7 +2,7 @@ import configparser
 import logging
 import os
 from datetime import datetime
-from peewee import IntegerField, CharField, BigIntegerField, ForeignKeyField, Model
+from peewee import IntegerField, CharField, BigIntegerField, ForeignKeyField, DateTimeField, Model
 from playhouse.pool  import PooledPostgresqlExtDatabase
 
 # Read config and parse constants
@@ -28,6 +28,7 @@ class User(BaseModel):
     user_name = CharField()
     account = CharField()
     register = IntegerField()
+    created_ts = DateTimeField()
 
     class Meta:
         db_table = 'users'
@@ -37,6 +38,7 @@ class TelegramChatMember(BaseModel):
     chat_name = CharField()
     member_id = IntegerField()
     member_name = CharField()
+    created_ts = DateTimeField()
 
     class Meta:
         db_table = 'chat_members'
@@ -49,6 +51,7 @@ class Tip(BaseModel):
     receiver = ForeignKeyField(User, backref='tips_received')
     dm_text = CharField()
     amount = IntegerField()
+    created_ts = DateTimeField()
 
     class Meta:
         db_table = 'tip_list'
@@ -73,7 +76,8 @@ def set_db_data_tip(message, users_to_tip, t_index):
                 sender=sender,
                 receiver=receiver,
                 dm_text=message_text,
-                amount=int(message['tip_amount']))
+                amount=int(message['tip_amount']),
+                created_ts=datetime.utcnow())
         if tip.save(force_insert=True) == 0:
             raise Exception("Couldn't insert tip {0}".format(message['id']))
     except Exception as e:

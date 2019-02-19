@@ -123,7 +123,8 @@ def send_tip(message, users_to_tip, tip_index):
             user_id = int(users_to_tip[tip_index]['receiver_id']),
             user_name = users_to_tip[tip_index]['receiver_screen_name'],
             account = users_to_tip[tip_index]['receiver_account'],
-            register=0
+            register=0,
+            created_ts=datetime.utcnow()
         )
         user.save()
         logging.info(

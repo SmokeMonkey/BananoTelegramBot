@@ -172,7 +172,8 @@ def telegram_event(path):
                         char_id = chat_id,
                         chat_name = chat_name,
                         member_id = member_id,
-                        member_name = member_name
+                        member_name = member_name,
+                        created_ts=datetime.utcnow()
                     )
                     chat_member.save()
 
@@ -208,7 +209,8 @@ def telegram_event(path):
                         chat_id = chat_id,
                         chat_name = chat_name,
                         member_id = member_id,
-                        member_name = member_name
+                        member_name = member_name,
+                        created_ts=datetime.utcnow()
                     )
 
                     chat_member.save()

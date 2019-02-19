@@ -198,7 +198,8 @@ def register_process(message):
             user_id = int(message['sender_id']),
             user_name = message['sender_screen_name'],
             account = sender_account,
-            register=1
+            register=1,
+            created_ts=datetime.utcnow()
         )
         if user.save() > 0:
             account_text = "You have successfully registered for an account.  Your deposit address is:"
@@ -236,7 +237,8 @@ def account_process(message):
             user_id = int(message['sender_id']),
             user_name = message['sender_screen_name'],
             account = sender_account,
-            register=1
+            register=1,
+            created_ts=datetime.utcnow()
         )
         user.save()
         account_text = "You didn't have an account set up, so I set one up for you.  Your deposit address is:"
