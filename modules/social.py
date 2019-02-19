@@ -124,12 +124,10 @@ def set_tip_list(message, users_to_tip):
             if str(message['text'][t_index][0]) == "@" and str(
                     message['text'][t_index]).lower() != (
                         "@" + str(message['sender_screen_name']).lower()):
-                check_user_call = (
-                    "SELECT member_id, member_name FROM telegram_chat_members "
-                    "WHERE chat_id = {} and member_name = '{}'".format(
-                        message['chat_id'], message['text'][t_index][1:]))
+                check_user_call = "SELECT member_id, member_name FROM telegram_chat_members WHERE chat_id = %s and member_name = %s"
+                arguments = (message['chat_id'], message['text'][t_index][1:])
 
-                user_check_data = db.get_db_data(check_user_call)
+                user_check_data = db.get_db_data(check_user_call, arguments)
                 if user_check_data:
                     receiver_id = user_check_data[0][0]
                     receiver_screen_name = user_check_data[0][1]
@@ -169,9 +167,9 @@ def validate_sender(message):
     """
     logging.info("{}: validating sender".format(datetime.now()))
     logging.info("sender id: {}".format(message['sender_id']))
-    db_call = "SELECT account, register FROM users where user_id = {}".format(
-        message['sender_id'])
-    sender_account_info = db.get_db_data(db_call)
+    db_call = "SELECT account, register FROM users where user_id = %s"
+    arguments = (message['sender_id'])
+    sender_account_info = db.get_db_data(db_call, arguments)
 
     if not sender_account_info:
         no_account_text = (
@@ -228,11 +226,9 @@ def send_reply(message, text):
 
 
 def check_telegram_member(chat_id, chat_name, member_id, member_name):
-    check_user_call = (
-        "SELECT member_id, member_name FROM telegram_chat_members "
-        "WHERE chat_id = {} and member_name = '{}'".format(
-            chat_id, member_name))
-    user_check_data = db.get_db_data(check_user_call)
+    check_user_call = "SELECT member_id, member_name FROM telegram_chat_members WHERE chat_id = %s and member_name = %s"
+    arguments = (chat_id, member_name)
+    user_check_data = db.get_db_data(check_user_call, arguments)
 
     logging.info("checking if user exists")
     if not user_check_data:

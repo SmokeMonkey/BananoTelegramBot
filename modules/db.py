@@ -16,6 +16,7 @@ DB_USER = config.get('webhooks', 'user')
 DB_PW = config.get('webhooks', 'password')
 DB_SCHEMA = config.get('webhooks', 'schema')
 DB_PORT = int(config.get('webhooks', 'port'))
+getcontext().prec = 3
 
 
 def check_db_exist():
@@ -145,7 +146,7 @@ def create_tables():
         res = execute_sql(sql)
 
 
-def get_db_data(db_call):
+def get_db_data(db_call, arguments):
     """
     Retrieve data from DB
     """
@@ -159,12 +160,12 @@ def get_db_data(db_call):
         charset="utf8")
     with db:
         db_cursor = db.cursor()
-        db_cursor.execute(db_call)
+        db_cursor.execute(db_call, arguments)
         db_data = db_cursor.fetchall()
         return db_data
 
 
-def set_db_data(db_call):
+def set_db_data(db_call, arguments):
     """
     Enter data into DB
     """
@@ -179,7 +180,7 @@ def set_db_data(db_call):
     try:
         with db:
             db_cursor = db.cursor()
-            db_cursor.execute(db_call)
+            db_cursor.execute(db_call, arguments)
             logging.info("{}: record inserted into DB".format(datetime.now()))
     except pymysql.ProgrammingError as e:
         logging.info("{}: Exception entering data into database".format(

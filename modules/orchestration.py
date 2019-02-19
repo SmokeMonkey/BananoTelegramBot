@@ -152,10 +152,9 @@ def balance_process(message):
     When the user sends a DM containing !balance, reply with the balance of the account linked with their Twitter ID
     """
     logging.info("{}: In balance process".format(datetime.now()))
-    balance_call = (
-        "SELECT account, register FROM users WHERE user_id = {} ".format(
-            message['sender_id']))
-    data = db.get_db_data(balance_call)
+    balance_call = "SELECT account, register FROM users WHERE user_id = %s"
+    arguments = (message['sender_id'])
+    data = db.get_db_data(balance_call, arguments)
     if not data:
         logging.info(
             "{}: User tried to check balance without an account".format(
@@ -192,10 +191,9 @@ def register_process(message):
     reply with their account number.
     """
     logging.info("{}: In register process.".format(datetime.now()))
-    register_call = (
-        "SELECT account, register FROM users WHERE user_id = {}".format(
-            message['sender_id']))
-    data = db.get_db_data(register_call)
+    register_call = "SELECT account, register FROM users WHERE user_id = %s"
+    arguments = (message['sender_id'])
+    data = db.get_db_data(register_call, arguments)
 
     if not data:
         # Create an account for the user
@@ -247,10 +245,10 @@ def account_process(message):
     """
 
     logging.info("{}: In account process.".format(datetime.now()))
-    sender_account_call = (
-        "SELECT account, register FROM users WHERE user_id = {}".format(
-            message['sender_id']))
-    account_data = db.get_db_data(sender_account_call)
+    sender_account_call = "SELECT account, register FROM users WHERE user_id = %s"
+    arguments = (message['sender_id'])
+    account_data = db.get_db_data(sender_account_call, arguments)
+    
     if not account_data:
         sender_account = rpc.account_create(
             wallet="{}".format(WALLET), work=True)
@@ -293,11 +291,11 @@ def withdraw_process(message):
     # check if there is a 2nd argument
     if 3 >= len(message['dm_array']) >= 2:
         # if there is, retrieve the sender's account and wallet
-        withdraw_account_call = (
-            "SELECT account FROM users WHERE user_id = {}".format(
-                message['sender_id']))
-        withdraw_data = db.get_db_data(withdraw_account_call)
-
+        logging.info("{}: In account process.".format(datetime.now()))
+        sender_account_call = "SELECT account, register FROM users WHERE user_id = %s"
+        arguments = (message['sender_id'])
+        account_data = db.get_db_data(sender_account_call, arguments)
+    
         if not withdraw_data:
             withdraw_no_account_text = "You do not have an account.  Respond with !register to set one up."
             social.send_dm(message['sender_id'], withdraw_no_account_text)

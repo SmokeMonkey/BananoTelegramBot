@@ -111,10 +111,10 @@ def send_tip(message, users_to_tip, tip_index):
         return
 
     # Check if the receiver has an account
-    receiver_account_get = (
-        "SELECT account FROM users where user_id = {}".format(
-            int(users_to_tip[tip_index]['receiver_id'])))
-    receiver_account_data = db.get_db_data(receiver_account_get)
+    receiver_account_get = "SELECT account FROM users where user_id = %s"
+    arguments = (int(users_to_tip[tip_index]['receiver_id']))
+    receiver_account_data = db.get_db_data(receiver_account_get, arguments)
+
 
     # If they don't, create an account for them
     if not receiver_account_data:
