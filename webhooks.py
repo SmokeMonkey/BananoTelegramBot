@@ -12,9 +12,7 @@ import re
 
 from flask import Flask, render_template, request, g
 
-from modules.orchestration import parse_action, tip_process
-from modules.social import send_account_message, send_dm, send_reply, check_message_action, check_telegram_member, validate_tip_amount, validate_sender, validate_total_tip_amount
-from modules.db import User, TelegramChatMember, Tip, database, create_tables
+import modules as mod
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -35,7 +33,7 @@ app = Flask(__name__)
 # to create and tear down a database connection on each request.
 @app.before_request
 def before_request():
-    g.db = database
+    g.db = mod.db.database
     g.db.connect()
 
 @app.after_request
@@ -111,7 +109,7 @@ def telegram_event(path):
                 logging.info("{}: action identified: {}".format(
                     datetime.utcnow(), message['dm_action']))
 
-                parse_action(message)
+                mod.orchestration.parse_action(message)
 
             elif (request_json['message']['chat']['type'] == 'supergroup'
                   or request_json['message']['chat']['type'] == 'group'):
@@ -129,7 +127,7 @@ def telegram_event(path):
                     message['chat_name'] = chat_name
 
 
-                    check_telegram_member(
+                    mod.social.check_telegram_member(
                         message['chat_id'], message['chat_name'],
                         message['sender_id'], message['sender_screen_name'])
 
@@ -138,21 +136,21 @@ def telegram_event(path):
                     message['text'] = message['text'].lower()
                     message['text'] = message['text'].split(' ')
 
-                    message = check_message_action(message)
+                    message = mod.social.check_message_action(message)
                     if message['action'] is None:
                         logging.debug(
                             "{}: Mention of nano tip bot without a !tip command."
                             .format(datetime.utcnow()))
                         return '', HTTPStatus.OK
 
-                    message = validate_tip_amount(message)
+                    message = mod.social.validate_tip_amount(message)
                     if message['tip_amount'] <= 0:
                         return '', HTTPStatus.OK
 
                     if message['action'] != -1 and str(
                             message['sender_id']) != str(BOT_ID_TELEGRAM):
                         try:
-                            tip_process(message, users_to_tip)
+                            mod.orchestration.tip_process(message, users_to_tip)
                         except Exception as e:
                             logging.info("Exception: {}".format(e))
                             raise e
@@ -168,7 +166,7 @@ def telegram_event(path):
                     member_name = request_json['message']['new_chat_member'][
                         'username']
 
-                    chat_member = TelegramChatMember(
+                    chat_member = mod.db.TelegramChatMember(
                         char_id = chat_id,
                         chat_name = chat_name,
                         member_id = member_id,
@@ -189,9 +187,9 @@ def telegram_event(path):
                         "member {}-{} left chat {}-{}, removing from DB.".
                         format(member_id, member_name, chat_id, chat_name))
 
-                    chat_member = TelegramChatMember.select().where(
-                                                TelegramChatMember.chat_id == chat_id & 
-                                                TelegramChatMember.member_id == member_id)
+                    chat_member = mod.db.TelegramChatMember.select().where(
+                                                mod.db.TelegramChatMember.chat_id == chat_id & 
+                                                mod.db.TelegramChatMember.member_id == member_id)
                     if chat_member.count() > 0:
                         chat_member.delete_instance()
 
@@ -205,7 +203,7 @@ def telegram_event(path):
                         "member {} created chat {}, inserting creator into DB."
                         .format(member_name, chat_name))
 
-                    chat_member = TelegramChatMember(
+                    chat_member = mod.db.TelegramChatMember(
                         chat_id = chat_id,
                         chat_name = chat_name,
                         member_id = member_id,
@@ -226,5 +224,5 @@ def telegram_event(path):
         return 'ok'
 
 if __name__ == "__main__":
-    create_tables()
+    mod.db.create_tables()
     app.run()
