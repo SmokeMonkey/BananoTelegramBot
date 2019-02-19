@@ -291,11 +291,10 @@ def withdraw_process(message):
     # check if there is a 2nd argument
     if 3 >= len(message['dm_array']) >= 2:
         # if there is, retrieve the sender's account and wallet
-        logging.info("{}: In account process.".format(datetime.now()))
-        sender_account_call = "SELECT account, register FROM users WHERE user_id = %s"
+        withdraw_account_call = "SELECT account FROM users WHERE user_id = %s"
         arguments = (message['sender_id'])
-        account_data = db.get_db_data(sender_account_call, arguments)
-    
+        withdraw_data = db.get_db_data(withdraw_account_call, arguments)
+
         if not withdraw_data:
             withdraw_no_account_text = "You do not have an account.  Respond with !register to set one up."
             social.send_dm(message['sender_id'], withdraw_no_account_text)
