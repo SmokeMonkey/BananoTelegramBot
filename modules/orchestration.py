@@ -6,7 +6,6 @@ from decimal import Decimal
 from http import HTTPStatus
 
 import nano
-from eventlet.tpool import execute
 
 import currency
 import db
