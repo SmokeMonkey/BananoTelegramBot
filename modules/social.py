@@ -231,7 +231,7 @@ def check_telegram_member(chat_id, chat_name, member_id, member_name):
         logging.info("{}: User {}-{} not found in DB, inserting".format(
             datetime.datetime.utcnow(), chat_id, member_name))
         chat_member = db.TelegramChatMember(
-            char_id = chat_id,
+            chat_id = chat_id,
             chat_name = chat_name,
             member_id = member_id,
             member_name = member_name,
