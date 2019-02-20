@@ -1,6 +1,7 @@
 import configparser
 import logging
 import os
+import re
 import datetime
 from decimal import Decimal
 from peewee import fn
@@ -57,6 +58,14 @@ def check_message_action(message):
 
     return message
 
+# find amount in regular tips
+def find_amount(input_text):
+	regex = r'(?:^|\s)(\d*\.?\d+)(?=$|\s)'
+	matches = re.findall(regex, input_text, re.IGNORECASE)
+	if len(matches) >= 1:
+		return float(matches[0].strip())
+	else:
+		raise Exception("couldn't find amount")
 
 def validate_tip_amount(message):
     """
@@ -64,8 +73,7 @@ def validate_tip_amount(message):
     """
     logging.info("{}: in validate_tip_amount".format(datetime.datetime.utcnow()))
     try:
-        message['tip_amount'] = Decimal(
-            message['text'][message['starting_point']])
+        message['tip_amount'] = Decimal(find_amount(message['text']))
     except Exception:
         logging.info("{}: Tip amount was not a number: {}".format(
             datetime.datetime.utcnow(), message['text'][message['starting_point']]))
@@ -78,12 +86,12 @@ def validate_tip_amount(message):
 
     if Decimal(message['tip_amount']) < Decimal(MIN_TIP):
         min_tip_text = (
-            "The minimum tip amount is {} Nos.  Please update your tip amount and try again."
+            "The minimum tip amount is {} BANANO.  Please update your tip amount and try again."
             .format(MIN_TIP))
         send_reply(message, min_tip_text)
 
         message['tip_amount'] = -1
-        logging.info("{}: User tipped less than {} Nos.".format(
+        logging.info("{}: User tipped less than {} BANANO.".format(
             datetime.datetime.utcnow(), MIN_TIP))
         return message
 
