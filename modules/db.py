@@ -34,7 +34,7 @@ class User(BaseModel):
         db_table = 'users'
 
 class TelegramChatMember(BaseModel):
-    chat_id = BigIntegerField(primary_key=True)
+    chat_id = BigIntegerField()
     chat_name = CharField()
     member_id = IntegerField()
     member_name = CharField()
