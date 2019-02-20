@@ -49,6 +49,8 @@ def check_message_action(message):
     logging.info("{}: in check_message_action.".format(datetime.datetime.utcnow()))
     try:
         message['action_index'] = message['text'].index(".ban")
+        if (message['action_index'] != 0):
+            raise ValueError("action must be first in message")
     except ValueError:
         message['action'] = None
         return message
@@ -124,40 +126,35 @@ def set_tip_list(message, users_to_tip):
     logging.info("{}: in set_tip_list.".format(datetime.datetime.utcnow()))
 
     logging.info("trying to set tiplist in telegram: {}".format(message))
-    print('MSGTEXT {}'.format(message['text']))
-    for t_index in range(message['starting_point'], len(message['text'])):
-        if len(message['text'][t_index]) > 0:
-            if str(message['text'][t_index][0]) == "@" and str(
-                    message['text'][t_index]).lower() != (
-                        "@" + str(message['sender_screen_name']).lower()):
-                try:
-                    user = db.TelegramChatMember.select().where(
-                        (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
-                        (fn.lower(db.TelegramChatMember.member_name) == message['text'][t_index][1:].lower())).get()
-                    receiver_id = user.chat_id
-                    receiver_screen_name = user.member_name
+    for item in message['text'].split():
+        if str(item).startswith("@") and str(item).lower() != str(message['sender_screen_name']).lower():
+            try:
+                user = db.TelegramChatMember.select().where(
+                    (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
+                    (fn.lower(db.TelegramChatMember.member_name) == item[1:].lower())).get()
+                receiver_id = user.chat_id
+                receiver_screen_name = user.member_name
 
-                    user_dict = {
-                        'receiver_id': receiver_id,
-                        'receiver_screen_name': receiver_screen_name,
-                        'receiver_account': None,
-                        'receiver_register': None
-                    }
-                    users_to_tip.append(user_dict)
-                except db.TelegramChatMember.DoesNotExist:
-                    logging.info(
-                        "User not found in DB: chat ID:{} - member name:{}".
-                        format(message['chat_id'],
-                               message['text'][t_index][1:]))
-                    missing_user_message = (
-                        "{} not found in our records.  In order to tip them, they need to be a "
-                        "member of the channel.  If they are in the channel, please have them "
-                        "send a message in the chat so I can add them. They also need to have Telegram username set up."
-                        .format(message['text'][t_index]))
-                    send_reply(message, missing_user_message)
-                    users_to_tip.clear()
-                    return message, users_to_tip
-
+                user_dict = {
+                    'receiver_id': receiver_id,
+                    'receiver_screen_name': receiver_screen_name,
+                    'receiver_account': None,
+                    'receiver_register': None
+                }
+                users_to_tip.append(user_dict)
+            except db.TelegramChatMember.DoesNotExist:
+                logging.info(
+                    "User not found in DB: chat ID:{} - member name:{}".
+                    format(message['chat_id'],
+                            item[1:]))
+                missing_user_message = (
+                    "{} not found in our records.  In order to tip them, they need to be a "
+                    "member of the channel.  If they are in the channel, please have them "
+                    "send a message in the chat so I can add them. They also need to have Telegram username set up."
+                    .format(item))
+                send_reply(message, missing_user_message)
+                users_to_tip.clear()            
+ 
     logging.info("{}: Users_to_tip: {}".format(datetime.datetime.utcnow(), users_to_tip))
     message['total_tip_amount'] = message['tip_amount']
     if len(users_to_tip) > 0 and message['tip_amount'] != -1:
