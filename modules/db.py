@@ -44,7 +44,7 @@ class TelegramChatMember(BaseModel):
         db_table = 'chat_members'
 
 class Tip(BaseModel):
-    dm_id = IntegerField(primary_key=True)
+    dm_id = IntegerField()
     tx_id = IntegerField()
     processed = IntegerField()
     sender = ForeignKeyField(User, backref='tips_sent')

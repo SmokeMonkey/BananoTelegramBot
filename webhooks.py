@@ -118,6 +118,8 @@ def telegram_event(path):
 
             elif (request_json['message']['chat']['type'] == 'supergroup'
                   or request_json['message']['chat']['type'] == 'group'):
+                if 'forward_from' in request_json['message']:
+                    return '', HTTPStatus.OK
                 if 'text' in request_json['message']:
                     message['sender_id'] = request_json['message']['from'][
                         'id']
@@ -143,7 +145,7 @@ def telegram_event(path):
                     message = social.check_message_action(message)
                     if message['action'] is None:
                         logging.debug(
-                            "{}: Mention of banano tip bot without a .ban command."
+                            "{}: Mention of banano tip bot without a .tip command."
                             .format(datetime.datetime.utcnow()))
                         return '', HTTPStatus.OK
 

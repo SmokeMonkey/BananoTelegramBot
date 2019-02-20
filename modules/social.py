@@ -48,8 +48,11 @@ def check_message_action(message):
     """
     logging.info("{}: in check_message_action.".format(datetime.datetime.utcnow()))
     try:
-        message['action_index'] = message['text'].index(".ban")
-        if (message['action_index'] != 0):
+        if message['text'].startswith('.tip '):
+            message['action_index'] = message['text'].index(".tip")
+        elif message['text'].startswith('.b '):
+            message['action_index'] = message['text'].index(".b")
+        else:
             raise ValueError("action must be first in message")
     except ValueError:
         message['action'] = None
@@ -80,7 +83,7 @@ def validate_tip_amount(message):
         logging.info("{}: Tip amount was not a number: {}".format(
             datetime.datetime.utcnow(), message['text'][message['starting_point']]))
         not_a_number_text = 'Looks like the value you entered to tip was not a number.  You can try to tip ' \
-                            'again using the format .ban 1234 @username'
+                            'again using the format .tip 1234 @username'
         send_reply(message, not_a_number_text)
 
         message['tip_amount'] = -1
@@ -148,9 +151,8 @@ def set_tip_list(message, users_to_tip):
                     format(message['chat_id'],
                             item[1:]))
                 missing_user_message = (
-                    "{} not found in our records.  In order to tip them, they need to be a "
-                    "member of the channel.  If they are in the channel, please have them "
-                    "send a message in the chat so I can add them. They also need to have Telegram username set up."
+                    "Couldn't send tip. In order to tip {}}, they need to have sent at least "
+                    "one message in the group and they also need to have a username associated with their account."
                     .format(item))
                 send_reply(message, missing_user_message)
                 users_to_tip.clear()            

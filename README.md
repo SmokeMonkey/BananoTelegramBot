@@ -2,7 +2,7 @@
 
 Commands
 
-- .ban
+- .tip
 - .help
 - .register
 - .account

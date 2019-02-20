@@ -54,11 +54,11 @@ def parse_action(message):
         finally:
             return '', HTTPStatus.OK
 
-    elif message['dm_action'] == '.ban' or message['dm_action'] == '/ban':
+    elif message['dm_action'] == '.tip' or message['dm_action'] == '/ban':
         try:
             redirect_tip_text = (
                 "Tips are processed through public messages now.  Please send this message in group chat in the format "
-                ".ban 1 @user1.")
+                ".tip 1 @user1.")
             social.send_dm(message['sender_id'], redirect_tip_text)
         except Exception as e:
             logging.info("Exception: {}".format(e))
@@ -116,7 +116,7 @@ def help_process(message):
         + BULLET +
         " .balance: This shows you how much funds are in your your account.\n\n"
         + BULLET +
-        " .ban: Tips are sent directly to @username on telegram.  Tag @BANANOTipBot and mention .ban <amount> <@username>.  EXAMPLE: .ban 1 @user will send a 1 BANANO tip to @user.\n\n"
+        " .tip: Tips are sent directly to @username on telegram.  Tag @BANANOTipBot and mention .tip <amount> <@username>.  EXAMPLE: .tip 1 @user will send a 1 BANANO tip to @user.\n\n"
         + BULLET +
         " .account: Returns the account number.  You can use this to deposit more BANANO to tip from your personal wallet.\n\n"
         + BULLET +
