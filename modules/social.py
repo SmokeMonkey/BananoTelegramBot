@@ -53,7 +53,7 @@ def check_message_action(message):
         return message
 
     message['action'] = message['text'][message['action_index']].lower()
-    message['starting_point'] = message['action_index'] + 1
+    message['starting_point'] = message['action_index']
 
     return message
 
