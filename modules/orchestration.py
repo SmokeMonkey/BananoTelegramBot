@@ -140,7 +140,9 @@ def balance_process(message):
         sender_register = user.register
 
         if sender_register == 0:
-            db.User.update(register=1).where(db.User.user_id == int(message['sender_id']) & db.User.register == 0).execute()
+            db.User.update(register=1).where(
+                (db.User.user_id == int(message['sender_id'])) &
+                (db.User.register == 0)).execute()
 
         currency.receive_pending(message['sender_account'])
         balance_return = rpc.account_balance(
@@ -174,7 +176,9 @@ def register_process(message):
         if user.register == 0:
             # The user has an account, but needed to register, so send a message to the user with their account
             sender_account = user.account
-            db.User.update(register=1).where(db.User.user_id == int(message['sender_id']) & db.User.register == 0).execute()
+            db.User.update(register=1).where(
+                (db.User.user_id == int(message['sender_id'])) &
+                (db.User.register == 0)).execute()
 
             account_registration_text = "You have successfully registered for an account.  Your deposit address is:"
             social.send_account_message(account_registration_text, message,
@@ -228,7 +232,9 @@ def account_process(message):
         sender_register = user.register
 
         if sender_register == 0:
-            db.User.update(register=1).where(db.User.user_id == int(message['sender_id']) & db.User.register == 0).execute()
+            db.User.update(register=1).where(
+                (db.User.user_id == int(message['sender_id'])) &
+                (db.User.register == 0)).execute()
 
         account_text = "Your deposit address is:"
         social.send_account_message(account_text, message, sender_account)

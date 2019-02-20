@@ -124,7 +124,9 @@ def set_tip_list(message, users_to_tip):
                     message['text'][t_index]).lower() != (
                         "@" + str(message['sender_screen_name']).lower()):
                 try:
-                    user = db.TelegramChatMember.select().where(db.TelegramChatMember.chat_id == int(message['chat_id']) & db.TelegramChatMember.member_name == message['text'][t_index][1:]).get()
+                    user = db.TelegramChatMember.select().where(
+                        (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
+                        (db.TelegramChatMember.member_name == message['text'][t_index][1:])).get()
                     receiver_id = user.chat_id
                     receiver_screen_name = user.member_name
 
@@ -171,7 +173,9 @@ def validate_sender(message):
         message['sender_register'] = user.register
 
         if message['sender_register'] != 1:
-            db.User.update(register=1).where(db.User.user_id == int(message['sender_id']) & db.User.register == 0).execute()
+            db.User.update(register=1).where(
+                (db.User.user_id == int(message['sender_id'])) &
+                (db.User.register == 0)).execute()
 
         currency.receive_pending(message['sender_account'])
         message['sender_balance_raw'] = rpc.account_balance(
@@ -220,7 +224,9 @@ def send_reply(message, text):
 def check_telegram_member(chat_id, chat_name, member_id, member_name):
     import modules.db as db
     try:
-        db.TelegramChatMember.select().where(db.TelegramChatMember.chat_id == chat_id & db.TelegramChatMember.member_name == member_name).get()
+        db.TelegramChatMember.select().where(
+            (db.TelegramChatMember.chat_id == chat_id) &
+            (db.TelegramChatMember.member_name == member_name)).get()
     except db.TelegramChatMember.DoesNotExist:
         logging.info("{}: User {}-{} not found in DB, inserting".format(
             datetime.datetime.utcnow(), chat_id, member_name))

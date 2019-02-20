@@ -193,8 +193,8 @@ def telegram_event(path):
                         format(member_id, member_name, chat_id, chat_name))
 
                     chat_member = db.TelegramChatMember.select().where(
-                                                db.TelegramChatMember.chat_id == chat_id & 
-                                                db.TelegramChatMember.member_id == member_id)
+                                                (db.TelegramChatMember.chat_id == chat_id) & 
+                                                (db.TelegramChatMember.member_id == member_id))
                     if chat_member.count() > 0:
                         chat_member.delete_instance()
 
