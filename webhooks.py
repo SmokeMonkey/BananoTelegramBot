@@ -139,7 +139,6 @@ def telegram_event(path):
                     message['text'] = request_json['message']['text']
                     message['text'] = message['text'].replace('\n', ' ')
                     message['text'] = message['text'].lower()
-                    message['text'] = message['text'].split(' ')
 
                     message = social.check_message_action(message)
                     if message['action'] is None:
