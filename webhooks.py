@@ -144,7 +144,7 @@ def telegram_event(path):
                     message = social.check_message_action(message)
                     if message['action'] is None:
                         logging.debug(
-                            "{}: Mention of banano tip bot without a .tip command."
+                            "{}: Mention of banano tip bot without a .ban command."
                             .format(datetime.datetime.utcnow()))
                         return '', HTTPStatus.OK
 
@@ -155,7 +155,7 @@ def telegram_event(path):
                     if message['action'] != -1 and str(
                             message['sender_id']) != str(BOT_ID_TELEGRAM):
                         try:
-                            orchestration.tip_process(message, users_to_tip)
+                            orchestration.ban_process(message, users_to_tip)
                         except Exception as e:
                             logging.info("Exception: {}".format(e))
                             raise e

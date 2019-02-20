@@ -3,6 +3,7 @@ import logging
 import os
 import datetime
 from decimal import Decimal
+from peewee import fn
 
 import nano
 import pyqrcode
@@ -18,7 +19,6 @@ TELEGRAM_KEY = config.get('webhooks', 'telegram_key')
 # Constants
 MIN_TIP = config.get('webhooks', 'min_tip')
 NODE_IP = config.get('webhooks', 'node_ip')
-BOTNAME = config.get('webhooks', 'bot_id_telegram')
 
 # Connect to Telegram
 telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
@@ -47,9 +47,7 @@ def check_message_action(message):
     """
     logging.info("{}: in check_message_action.".format(datetime.datetime.utcnow()))
     try:
-        botname = "@{}".format(BOTNAME).lower()
-        message['bot'] = message['text'].index(botname)
-        message['action_index'] = message['text'].index(".tip")
+        message['action_index'] = message['text'].index(".ban")
     except ValueError:
         message['action'] = None
         return message
@@ -72,7 +70,7 @@ def validate_tip_amount(message):
         logging.info("{}: Tip amount was not a number: {}".format(
             datetime.datetime.utcnow(), message['text'][message['starting_point']]))
         not_a_number_text = 'Looks like the value you entered to tip was not a number.  You can try to tip ' \
-                            'again using the format .tip 1234 @username'
+                            'again using the format .ban 1234 @username'
         send_reply(message, not_a_number_text)
 
         message['tip_amount'] = -1
@@ -126,7 +124,7 @@ def set_tip_list(message, users_to_tip):
                 try:
                     user = db.TelegramChatMember.select().where(
                         (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
-                        (db.TelegramChatMember.member_name == message['text'][t_index][1:])).get()
+                        (fn.lower(db.TelegramChatMember.member_name) == message['text'][t_index][1:].lower())).get()
                     receiver_id = user.chat_id
                     receiver_screen_name = user.member_name
 
@@ -226,7 +224,7 @@ def check_telegram_member(chat_id, chat_name, member_id, member_name):
     try:
         db.TelegramChatMember.select().where(
             (db.TelegramChatMember.chat_id == chat_id) &
-            (db.TelegramChatMember.member_name == member_name)).get()
+            (fn.lower(db.TelegramChatMember.member_name) == member_name.lower())).get()
     except db.TelegramChatMember.DoesNotExist:
         logging.info("{}: User {}-{} not found in DB, inserting".format(
             datetime.datetime.utcnow(), chat_id, member_name))
