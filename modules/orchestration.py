@@ -204,7 +204,7 @@ def register_process(message):
             register=1,
             created_ts=datetime.datetime.utcnow()
         )
-        if user.save() > 0:
+        if user.save(force_insert=True) > 0:
             account_text = "You have successfully registered for an account.  Your deposit address is:"
             social.send_account_message(account_text, message, sender_account)
         else:
@@ -245,7 +245,7 @@ def account_process(message):
             register=1,
             created_ts=datetime.datetime.utcnow()
         )
-        user.save()
+        user.save(force_insert=True)
         account_text = "You didn't have an account set up, so I set one up for you.  Your deposit address is:"
         social.send_account_message(account_text, message, sender_account)
 

@@ -231,7 +231,7 @@ def check_telegram_member(chat_id, chat_name, member_id, member_name):
             member_name = member_name,
             created_ts=datetime.datetime.utcnow()
         )
-        chat_member.save()
+        chat_member.save(force_insert=True)
 
 def send_account_message(account_text, message, account):
     """

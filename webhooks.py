@@ -54,6 +54,10 @@ def telegram_webhook():
         logging.info("Error {}".format(response))
     return response
 
+@app.cli.command('dbinit')
+def dbinit():
+    import modules.db as db
+    db.create_tables()
 
 # Flask routing
 @app.route('/', defaults={'path': ''}, methods=["POST"])
@@ -174,7 +178,7 @@ def telegram_event(path):
                         member_name = member_name,
                         created_ts=datetime.datetime.utcnow()
                     )
-                    chat_member.save()
+                    chat_member.save(force_insert=True)
 
                 elif 'left_chat_member' in request_json['message']:
                     chat_id = request_json['message']['chat']['id']
@@ -212,7 +216,7 @@ def telegram_event(path):
                         created_ts=datetime.datetime.utcnow()
                     )
 
-                    chat_member.save()
+                    chat_member.save(force_insert=True)
 
             else:
                 logging.info("In try: request: {}".format(request_json))

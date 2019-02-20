@@ -125,7 +125,7 @@ def send_tip(message, users_to_tip, tip_index):
             register=0,
             created_ts=datetime.datetime.utcnow()
         )
-        user.save()
+        user.save(force_insert=True)
         logging.info(
             "{}: Sender sent to a new receiving account.  Created  account {}".
             format(datetime.datetime.utcnow(),
