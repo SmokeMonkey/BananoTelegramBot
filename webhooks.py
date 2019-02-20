@@ -155,7 +155,7 @@ def telegram_event(path):
                     if message['action'] != -1 and str(
                             message['sender_id']) != str(BOT_ID_TELEGRAM):
                         try:
-                            orchestration.ban_process(message, users_to_tip)
+                            orchestration.tip_process(message, users_to_tip)
                         except Exception as e:
                             logging.info("Exception: {}".format(e))
                             raise e
