@@ -132,7 +132,7 @@ def set_tip_list(message, users_to_tip):
                 user = db.TelegramChatMember.select().where(
                     (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
                     (fn.lower(db.TelegramChatMember.member_name) == item[1:].lower())).get()
-                receiver_id = user.chat_id
+                receiver_id = user.member_id
                 receiver_screen_name = user.member_name
 
                 user_dict = {
