@@ -49,7 +49,7 @@ def check_message_action(message):
     try:
         botname = "@{}".format(BOTNAME).lower()
         message['bot'] = message['text'].index(botname)
-        message['action_index'] = message['text'].index("!tip")
+        message['action_index'] = message['text'].index(".tip")
     except ValueError:
         message['action'] = None
         return message
@@ -72,7 +72,7 @@ def validate_tip_amount(message):
         logging.info("{}: Tip amount was not a number: {}".format(
             datetime.datetime.utcnow(), message['text'][message['starting_point']]))
         not_a_number_text = 'Looks like the value you entered to tip was not a number.  You can try to tip ' \
-                            'again using the format !tip 1234 @username'
+                            'again using the format .tip 1234 @username'
         send_reply(message, not_a_number_text)
 
         message['tip_amount'] = -1

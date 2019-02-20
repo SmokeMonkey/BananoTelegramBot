@@ -144,7 +144,7 @@ def telegram_event(path):
                     message = social.check_message_action(message)
                     if message['action'] is None:
                         logging.debug(
-                            "{}: Mention of nano tip bot without a !tip command."
+                            "{}: Mention of banano tip bot without a .tip command."
                             .format(datetime.datetime.utcnow()))
                         return '', HTTPStatus.OK
 
