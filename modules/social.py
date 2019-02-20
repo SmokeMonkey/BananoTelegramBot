@@ -116,7 +116,7 @@ def set_tip_list(message, users_to_tip):
     logging.info("{}: in set_tip_list.".format(datetime.datetime.utcnow()))
 
     logging.info("trying to set tiplist in telegram: {}".format(message))
-    for t_index in range(message['starting_point'], len(message['text'])):
+    for t_index in range(message['starting_point'] + 1, len(message['text'])):
         if len(message['text'][t_index]) > 0:
             if str(message['text'][t_index][0]) == "@" and str(
                     message['text'][t_index]).lower() != (
