@@ -8,6 +8,8 @@ import datetime
 import nano
 import requests
 
+from modules.conversion import BananoConversions
+
 # Read config and parse constants
 config = configparser.ConfigParser()
 config.read(os.environ['MY_CONF_DIR'] + '/webhooks.ini')
@@ -18,7 +20,6 @@ NODE_IP = config.get('webhooks', 'node_ip')
 
 # Connect to Nano node
 rpc = nano.rpc.Client(NODE_IP)
-raw_denominator = 10**29
 
 
 def receive_pending(sender_account):
@@ -168,7 +169,7 @@ def send_tip(message, users_to_tip, tip_index):
         balance_return = rpc.account_balance(
             account="{}".format(users_to_tip[tip_index]['receiver_account']))
         users_to_tip[tip_index][
-            'balance'] = balance_return['balance'] / raw_denominator
+            'balance'] = BananoConversions.raw_to_banano(balance_return['balance'])
 
         # create a string to remove scientific notation from small decimal tips
         if str(users_to_tip[tip_index]['balance'])[0] == ".":

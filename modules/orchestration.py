@@ -7,6 +7,8 @@ from http import HTTPStatus
 
 import nano
 
+from modules.conversion import BananoConversions
+
 # Read config and parse constants
 config = configparser.ConfigParser()
 config.read(os.environ['MY_CONF_DIR'] + '/webhooks.ini')
@@ -19,7 +21,6 @@ MIN_TIP = config.get('webhooks', 'min_tip')
 
 # Connect to global functions
 rpc = nano.rpc.Client(NODE_IP)
-raw_denominator = 10**29
 
 
 def parse_action(message):
@@ -148,7 +149,7 @@ def balance_process(message):
         balance_return = rpc.account_balance(
             account="{}".format(message['sender_account']))
         message['sender_balance_raw'] = balance_return['balance']
-        message['sender_balance'] = balance_return['balance'] / raw_denominator
+        message['sender_balance'] = BananoConversions.raw_to_banano(balance_return['balance'])
 
         balance_text = "Your balance is {} BAN.".format(
             message['sender_balance'])
@@ -312,8 +313,7 @@ def withdraw_process(message):
                         social.send_dm(message['sender_id'],
                                        invalid_amount_text)
                         return
-                    withdraw_amount_raw = int(
-                        withdraw_amount * raw_denominator)
+                    withdraw_amount_raw = BananoConversions.banano_to_raw(withdraw_amount)
                     if Decimal(withdraw_amount_raw) > Decimal(
                             balance_return['balance']):
                         not_enough_balance_text = (
@@ -324,8 +324,8 @@ def withdraw_process(message):
                         return
                 else:
                     withdraw_amount_raw = balance_return['balance']
-                    withdraw_amount = balance_return[
-                        'balance'] / raw_denominator
+                    withdraw_amount = BananoConversions.raw_to_banano(balance_return[
+                        'balance'])
                 # send the total balance to the provided account
                 work = currency.get_pow(sender_account)
                 if work == '':

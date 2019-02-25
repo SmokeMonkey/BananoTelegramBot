@@ -10,6 +10,8 @@ import nano
 import pyqrcode
 import telegram
 
+from modules.conversion import BananoConversions
+
 # Read config and parse constants
 config = configparser.ConfigParser()
 config.read(os.environ['MY_CONF_DIR'] + '/webhooks.ini')
@@ -26,7 +28,6 @@ telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
 
 # Connect to node
 rpc = nano.rpc.Client(NODE_IP)
-raw_denominator = 10**29
 
 
 def send_dm(receiver, message):
@@ -101,8 +102,7 @@ def validate_tip_amount(message):
         return message
 
     try:
-        message['tip_amount_raw'] = Decimal(
-            message['tip_amount']) * raw_denominator
+        message['tip_amount_raw'] = BananoConversions.banano_to_raw(message['tip_amount'])
     except Exception as e:
         logging.info(
             "{}: Exception converting tip_amount to tip_amount_raw".format(
@@ -186,8 +186,7 @@ def validate_sender(message):
         currency.receive_pending(message['sender_account'])
         message['sender_balance_raw'] = rpc.account_balance(
             account='{}'.format(message['sender_account']))
-        message['sender_balance'] = message['sender_balance_raw'][
-            'balance'] / raw_denominator
+        message['sender_balance'] = BananoConversions.raw_to_banano(message['sender_balance_raw'])
 
         return message
     except db.User.DoesNotExist:
@@ -206,8 +205,7 @@ def validate_total_tip_amount(message):
     Validate that the sender has enough Nano to cover the tip to all users
     """
     logging.info("{}: validating total tip amount".format(datetime.datetime.utcnow()))
-    if message['sender_balance_raw']['balance'] < (
-            message['total_tip_amount'] * raw_denominator):
+    if message['sender_balance_raw']['balance'] < BananoConversions.banano_to_raw(message['total_tip_amount']):
         not_enough_text = (
             "You do not have enough BANANO to cover this {} BANANO tip.  Please check your balance by "
             "sending a DM to me with .balance and retry.".format(
