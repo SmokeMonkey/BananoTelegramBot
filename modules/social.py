@@ -186,7 +186,7 @@ def validate_sender(message):
         currency.receive_pending(message['sender_account'])
         message['sender_balance_raw'] = rpc.account_balance(
             account='{}'.format(message['sender_account']))
-        message['sender_balance'] = BananoConversions.raw_to_banano(message['sender_balance_raw'])
+        message['sender_balance'] = BananoConversions.raw_to_banano(message['sender_balance_raw']['balance'])
 
         return message
     except db.User.DoesNotExist:
