@@ -103,8 +103,14 @@ def telegram_event(path):
                     "Direct message received in Telegram.  Processing.")
                 message['sender_id'] = request_json['message']['from']['id']
 
-                message['sender_screen_name'] = request_json['message'][
-                        'from']['username']
+                if 'username' in request_json['message']['from']:
+                        message['sender_screen_name'] = request_json['message']['from']['username']
+                else:
+                    if 'first_name' in request_json['message']['from']:
+                        message['sender_screen_name'] = request_json['message']['from']['first_name']
+                    if 'last_name' in request_json['message']['from']:
+                        message['sender_screen_name'] = \
+                            message['sender_screen_name'] + ' ' + request_json['message']['from']['last_name']
 
                 message['dm_id'] = request_json['update_id']
                 message['text'] = request_json['message']['text']
@@ -126,9 +132,9 @@ def telegram_event(path):
                     if 'username' in request_json['message']['from']:
                             message['sender_screen_name'] = request_json['message']['from']['username']
                     else:
-                        if 'first_name' in request_json['message']['from'].keys():
+                        if 'first_name' in request_json['message']['from']:
                             message['sender_screen_name'] = request_json['message']['from']['first_name']
-                        if 'last_name' in request_json['message']['from'].keys():
+                        if 'last_name' in request_json['message']['from']):
                             message['sender_screen_name'] = \
                                 message['sender_screen_name'] + ' ' + request_json['message']['from']['last_name']
 
@@ -174,8 +180,10 @@ def telegram_event(path):
                     chat_name = request_json['message']['chat']['title']
                     member_id = request_json['message']['new_chat_member'][
                         'id']
-                    member_name = request_json['message']['new_chat_member'][
-                        'username']
+                    if 'username' in request_json['message']['new_chat_member']:
+                        member_name = request_json['message']['new_chat_member']['username']
+                    else:
+                        member_name = None
 
                     chat_member = db.TelegramChatMember(
                         char_id = chat_id,
@@ -191,8 +199,10 @@ def telegram_event(path):
                     chat_name = request_json['message']['chat']['title']
                     member_id = request_json['message']['left_chat_member'][
                         'id']
-                    member_name = request_json['message']['left_chat_member'][
-                        'username']
+                    if 'username' in request_json['message']['left_chat_member']:
+                        member_name = request_json['message']['left_chat_member']['username']
+                    else:
+                        member_name = None
 
                     logging.info(
                         "member {}-{} left chat {}-{}, removing from DB.".
