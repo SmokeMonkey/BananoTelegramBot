@@ -230,7 +230,7 @@ def check_telegram_member(chat_id, chat_name, member_id, member_name):
     try:
         db.TelegramChatMember.select().where(
             (db.TelegramChatMember.chat_id == chat_id) &
-            (fn.lower(db.TelegramChatMember.member_name) == member_name.lower())).get()
+            (db.TelegramChatMember.member_id == member_id)).get()
     except db.TelegramChatMember.DoesNotExist:
         logging.info("{}: User {}-{} not found in DB, inserting".format(
             datetime.datetime.utcnow(), chat_id, member_name))
