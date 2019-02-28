@@ -123,9 +123,14 @@ def telegram_event(path):
                 if 'text' in request_json['message']:
                     message['sender_id'] = request_json['message']['from'][
                         'id']
-
-                    message['sender_screen_name'] = request_json['message'][
-                        'from']['username']
+                    if 'username' in request_json['message']['from']:
+                            message['sender_screen_name'] = request_json['message']['from']['username']
+                    else:
+                        if 'first_name' in request_json['message']['from'].keys():
+                            message['sender_screen_name'] = request_json['message']['from']['first_name']
+                        if 'last_name' in request_json['message']['from'].keys():
+                            message['sender_screen_name'] = \
+                                message['sender_screen_name'] + ' ' + request_json['message']['from']['last_name']
 
                     message['id'] = request_json['message']['message_id']
                     message['chat_id'] = request_json['message']['chat']['id']

@@ -79,7 +79,7 @@ def validate_tip_amount(message):
     """
     logging.info("{}: in validate_tip_amount".format(datetime.datetime.utcnow()))
     try:
-        message['tip_amount'] = Decimal(find_amount(message['text']))
+        message['tip_amount'] = find_amount(message['text'])
     except Exception:
         logging.info("{}: Tip amount was not a number: {}".format(
             datetime.datetime.utcnow(), message['text'][message['starting_point']]))
@@ -90,7 +90,7 @@ def validate_tip_amount(message):
         message['tip_amount'] = -1
         return message
 
-    if Decimal(message['tip_amount']) < Decimal(MIN_TIP):
+    if int(message['tip_amount']) < int(MIN_TIP):
         min_tip_text = (
             "The minimum tip amount is {} BANANO.  Please update your tip amount and try again."
             .format(MIN_TIP))
@@ -152,7 +152,7 @@ def set_tip_list(message, users_to_tip):
                             item[1:]))
                 missing_user_message = (
                     "Couldn't send tip. In order to tip {}}, they need to have sent at least "
-                    "one message in the group and they also need to have a username associated with their account."
+                    "one message in the group."
                     .format(item))
                 send_reply(message, missing_user_message)
                 users_to_tip.clear()            
