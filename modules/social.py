@@ -158,42 +158,37 @@ def set_tip_list(message, users_to_tip, request_json):
                 users_to_tip.clear()
                 return message, users_to_tip
     else:
-        for t_index in range(message['starting_point'] + 1, len(message['text'])):
-            if first_user_flag and len(message['text'][t_index]) > 0 and str(message['text'][t_index][0]) != "@":
-                logging.info("users identified, regular text breaking the loop: {}".format(message['text'][t_index][0]))
-                break
-            if len(message['text'][t_index]) > 0:
-                if str(message['text'][t_index][0]) == "@" and str(message['text'][t_index]).lower() != (
-                        "@" + str(message['sender_screen_name']).lower()):
-                    try:
-                        user = db.TelegramChatMember.select().where(
-                            (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
-                            (fn.lower(db.TelegramChatMember.member_name) == message['text'][t_index][1:].lower())).get()
-                        receiver_id = user.member_id
-                        receiver_screen_name = user.member_name
-                        duplicate_user = False
+        for item in message['text'].split():
+            if str(item).startswith("@") and str(item).lower() != str(message['sender_screen_name']).lower():
+                try:
+                    user = db.TelegramChatMember.select().where(
+                        (db.TelegramChatMember.chat_id == int(message['chat_id'])) & 
+                        (fn.lower(db.TelegramChatMember.member_name) == item[1:].lower())).get()
+                    receiver_id = user.member_id
+                    receiver_screen_name = user.member_name
+                    duplicate_user = False
 
-                        for u_index in range(0, len(users_to_tip)):
-                            if users_to_tip[u_index]['receiver_id'] == receiver_id:
-                                duplicate_user = True
+                    for u_index in range(0, len(users_to_tip)):
+                        if users_to_tip[u_index]['receiver_id'] == receiver_id:
+                            duplicate_user = True
 
-                        if not duplicate_user:
-                            if not first_user_flag:
-                                first_user_flag = True
-                            logging.info("User tipped via searching the string for mentions")
-                            user_dict = {'receiver_id': receiver_id, 'receiver_screen_name': receiver_screen_name,
-                                            'receiver_account': None, 'receiver_register': None}
-                            users_to_tip.append(user_dict)
-                    except db.TelegramChatMember.DoesNotExist:
-                        logging.info("User not found in DB: chat ID:{} - member name:{}".
-                                        format(message['chat_id'], message['text'][t_index][1:]))
-                        missing_user_message = (
-                            "Couldn't send tip. In order to tip {}, they need to have sent at least "
-                            "one message in the group."
-                            .format((message['text'][t_index])))
-                        send_reply(message, missing_user_message)
-                        users_to_tip.clear()
-                        return message, users_to_tip
+                    if not duplicate_user:
+                        if not first_user_flag:
+                            first_user_flag = True
+                        logging.info("User tipped via searching the string for mentions")
+                        user_dict = {'receiver_id': receiver_id, 'receiver_screen_name': receiver_screen_name,
+                                        'receiver_account': None, 'receiver_register': None}
+                        users_to_tip.append(user_dict)
+                except db.TelegramChatMember.DoesNotExist:
+                    logging.info("User not found in DB: chat ID:{} - member name:{}".
+                                    format(message['chat_id'], item[1:]))
+                    missing_user_message = (
+                        "Couldn't send tip. In order to tip {}, they need to have sent at least "
+                        "one message in the group."
+                        .format(item))
+                    send_reply(message, missing_user_message)
+                    users_to_tip.clear()
+                    return message, users_to_tip
         try:
             text_mentions = request_json['message']['entities']
             for mention in text_mentions:
@@ -216,7 +211,7 @@ def set_tip_list(message, users_to_tip, request_json):
                         missing_user_message = (
                             "Couldn't send tip. In order to tip {}, they need to have sent at least "
                             "one message in the group."
-                            .format((message['text'][t_index])))
+                            .format(item))
                         send_reply(message, missing_user_message)
                         users_to_tip.clear()
                         return message, users_to_tip
