@@ -148,10 +148,9 @@ def set_tip_list(message, users_to_tip, request_json):
                 users_to_tip.append(user_dict)
             except db.TelegramChatMember.DoesNotExist:
                 logging.info("User not found in DB: chat ID:{} - member name:{}".
-                                format(message['chat_id'], request_json['message']['reply_to_message']['from']
-                                                                    ['first_name']))
+                                format(message['chat_id'], request_json['message']['reply_to_message']['from']['first_name']))
                 missing_user_message = (
-                    "Couldn't send tip. In order to tip {}}, they need to have sent at least "
+                    "Couldn't send tip. In order to tip {}, they need to have sent at least "
                     "one message in the group."
                     .format(request_json['message']['reply_to_message']['from']
                                                                     ['first_name']))
@@ -189,7 +188,7 @@ def set_tip_list(message, users_to_tip, request_json):
                         logging.info("User not found in DB: chat ID:{} - member name:{}".
                                         format(message['chat_id'], message['text'][t_index][1:]))
                         missing_user_message = (
-                            "Couldn't send tip. In order to tip {}}, they need to have sent at least "
+                            "Couldn't send tip. In order to tip {}, they need to have sent at least "
                             "one message in the group."
                             .format((message['text'][t_index])))
                         send_reply(missing_user_message)
@@ -215,7 +214,7 @@ def set_tip_list(message, users_to_tip, request_json):
                         logging.info("User not found in DB: chat ID:{} - member name:{}".
                                         format(message['chat_id'], mention['user']['first_name']))
                         missing_user_message = (
-                            "Couldn't send tip. In order to tip {}}, they need to have sent at least "
+                            "Couldn't send tip. In order to tip {}, they need to have sent at least "
                             "one message in the group."
                             .format((message['text'][t_index])))
                         send_reply(missing_user_message)
