@@ -126,7 +126,7 @@ def set_tip_list(message, users_to_tip, request_json):
     Loop through the message starting after the tip amount and identify any users that were tagged for a tip.  Add the
     user object to the users_to_tip dict to process the tips.
     """
-    logging.info("{}: in set_tip_list.".format(datetime.now()))
+    logging.info("{}: in set_tip_list.".format(datetime.datetime.utcnow()))
 
     # Identify the first user to string multi tips.  Once a non-user is mentioned, end the user list
 
@@ -224,7 +224,7 @@ def set_tip_list(message, users_to_tip, request_json):
         except:
             pass
 
-    logging.info("{}: Users_to_tip: {}".format(datetime.now(), users_to_tip))
+    logging.info("{}: Users_to_tip: {}".format(datetime.datetime.utcnow(), users_to_tip))
     message['total_tip_amount'] = message['tip_amount']
     if len(users_to_tip) > 0 and message['tip_amount'] != -1:
         message['total_tip_amount'] *= len(users_to_tip)
