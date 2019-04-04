@@ -191,7 +191,7 @@ def set_tip_list(message, users_to_tip, request_json):
                             "Couldn't send tip. In order to tip {}, they need to have sent at least "
                             "one message in the group."
                             .format((message['text'][t_index])))
-                        send_reply(missing_user_message)
+                        send_reply(message, missing_user_message)
                         users_to_tip.clear()
                         return message, users_to_tip
         try:
@@ -217,7 +217,7 @@ def set_tip_list(message, users_to_tip, request_json):
                             "Couldn't send tip. In order to tip {}, they need to have sent at least "
                             "one message in the group."
                             .format((message['text'][t_index])))
-                        send_reply(missing_user_message)
+                        send_reply(message, missing_user_message)
                         users_to_tip.clear()
                         return message, users_to_tip
         except:
