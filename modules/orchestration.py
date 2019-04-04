@@ -370,7 +370,7 @@ def withdraw_process(message):
             datetime.datetime.utcnow()))
 
 
-def tip_process(message, users_to_tip):
+def tip_process(message, users_to_tip, request_json):
     import modules.currency as currency
     import modules.social as social
     """
@@ -378,7 +378,7 @@ def tip_process(message, users_to_tip):
     """
     logging.info("{}: in tip_process".format(datetime.datetime.utcnow()))
 
-    message, users_to_tip = social.set_tip_list(message, users_to_tip)
+    message, users_to_tip = social.set_tip_list(message, users_to_tip, request_json)
 
     message = social.validate_sender(message)
     if message['sender_account'] is None or message['tip_amount'] <= 0:
